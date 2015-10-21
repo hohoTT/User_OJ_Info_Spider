@@ -1,8 +1,9 @@
 # coding=utf8
+import sqlite3
 import requests
+import datetime
 import re
 import logging
-import sqlite3
 from thread_pool import ThreadPool
 
 logging.basicConfig(level=logging.DEBUG)
@@ -22,10 +23,10 @@ class DbHandler(object):
     def db_info_connection(self):
         cx = sqlite3.connect(self.db_path)
         cu = cx.cursor()
-        cu.execute("create table if not exists info (username varchar(20) primary key, "
-                   "bc_rank integer, bc_rating integer, cf_rank integer, hdu_rank integer,"
+        cu.execute("create table if not exists info (id integer primary key autoincrement, "
+                   "username varchar(20), bc_rank integer, bc_rating integer, cf_rank integer, hdu_rank integer,"
                    "hdu_problems_submitted integer, hdu_problems_solved integer, hdu_submissions integer,"
-                   "hdu_accepted integer)")
+                   "hdu_accepted integer, crawling_date datetime)")
         return cx, cu
 
     def get_user_list(self):
@@ -38,24 +39,33 @@ class DbHandler(object):
         cf_result = kwargs["codeforces"]
         hdu_result = kwargs["hduoj"]
         cx, cu = self.db_info_connection()
+        now = datetime.datetime.now().strftime('%Y-%m-%d')
         cu.execute("select * from info where username = ?", (username, ))
         results = cu.fetchall()
+        # print "results-------------", results[-1][10] != now
         if not results:
-            cu.execute("insert into info values(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                       (username, 0, 0, 0, 0, 0, 0, 0, 0))
-
+            cu.execute("insert into info(username, bc_rank, bc_rating, cf_rank, hdu_rank, hdu_problems_submitted,"
+                       "hdu_problems_solved, hdu_submissions, hdu_accepted, crawling_date) "
+                       "values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                       (username, 0, 0, 0, 0, 0, 0, 0, 0, datetime.datetime.now().strftime('%Y-%m-%d')))
+        elif results[-1][10] != now:
+            cu.execute("insert into info(username, bc_rank, bc_rating, cf_rank, hdu_rank, hdu_problems_submitted,"
+                       "hdu_problems_solved, hdu_submissions, hdu_accepted, crawling_date) "
+                       "values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                       (username, 0, 0, 0, 0, 0, 0, 0, 0, datetime.datetime.now().strftime('%Y-%m-%d')))
         if bc_result != {}:
-            cu.execute("update info set bc_rank = ?, bc_rating = ? where username =  ? ",
-                       (bc_result["rank"], bc_result["rating"], username))
+            cu.execute("update info set bc_rank = ?, bc_rating = ? where username =  ? and crawling_date = ? ",
+                       (bc_result["rank"], bc_result["rating"], username, now))
         elif cf_result != {}:
-            cu.execute("update info set cf_rank = ? where username =  ? ", (cf_result["rank"], username))
+            cu.execute("update info set cf_rank = ? where username =  ? and crawling_date = ? ",
+                       (cf_result["rank"], username, now))
         else:
             cu.execute("update info set hdu_rank = ?, hdu_problems_submitted = ?, "
                        "hdu_problems_solved = ?, hdu_submissions = ?, "
-                       "hdu_accepted = ? where username =  ? ",
+                       "hdu_accepted = ? where username =  ? and crawling_date = ? ",
                        (hdu_result["rank"], hdu_result["problems_submitted"],
                         hdu_result["problems_solved"], hdu_result["submissions"],
-                        hdu_result["accepted"], username))
+                        hdu_result["accepted"], username, now))
         cx.commit()
 
 
