@@ -49,8 +49,8 @@ class ReportGenerator(BaseDBHandler):
                     t = u"<tr class=\"info\">"
                 t += u"<td>" + \
                      ["BestCoder Rank", "BestCoder Rating", "CodeForces Rank", "hduoj Rank",
-                      "hduoj Problems Submitted", "hduoj Problems Solved",
-                      "hduoj Submissions", "hduoj Accepted"][i - 2] \
+                      "HDUOJ Problems Submitted", "HDUOJ Problems Solved",
+                      "HDUOJ Submissions", "HDUOJ Accepted"][i - 2] \
                      + u"</td>"
                 for day_results in item:
                     t += u"<td>" + str(day_results[2]) + u"</td>"
