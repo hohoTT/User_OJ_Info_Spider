@@ -53,7 +53,7 @@ class ReportGenerator(BaseDBHandler):
                       "HDUOJ Submissions", "HDUOJ Accepted"][i - 2] \
                      + u"</td>"
                 for day_results in item:
-                    t += u"<td>" + str(day_results[2]) + u"</td>"
+                    t += u"<td>" + str(day_results[i]) + u"</td>"
                 t += u"</tr>"
                 html += t
         html += u"</tbody>"
